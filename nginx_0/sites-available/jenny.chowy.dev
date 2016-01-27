@@ -1,0 +1,65 @@
+    server {
+	listen	     8080;
+	server_name  www.jenny.chowy.dev;
+	rewrite ^(.*) http://jenny.chowy.dev$1 permanent;
+    }
+
+
+
+    server {
+        listen       8080;
+        server_name  jenny.chowy.dev;
+        root         /Library/WebServer/Documents/nginx/jenny;
+
+        #charset koi8-r;
+
+        access_log  /var/log/nginx/jenny.access.log  main;
+
+        # This bit tells nginx how to serve files that are in /css and /img
+        # This is necessary since we're using Angular
+        #  - if you aren't hosting any single page webapps, you probably won't need this
+        location ~ ^/(css|img) {
+            gzip_static on;
+
+            #Don't cache anything
+            expires -1;
+            add_header Pragma "no-cache";
+            add_header Cache-Control "no-store, no-cache, must-revalidate, post-check=0, pre-check=0";
+            break;
+        }
+
+        # For everything that isn't in /css or /img
+        location / {
+            #root   ngnix;
+            index  index.php;
+
+            # This tells NGINX to first find and serve a file specified by the uri,
+            # otherwise go to index.html.
+            try_files $uri /index.html;
+
+            #Don't cache anything
+            expires -1;
+            add_header Pragma "no-cache";
+            add_header Cache-Control "no-store, no-cache, must-revalidate, post-check=0, pre-check=0";
+            break;
+        }
+
+        location ~ \.php$ {
+            try_files $uri =404;
+            fastcgi_param PATH_INFO $fastcgi_path_info;
+            fastcgi_param PATH_TRANSLATED $document_root$fastcgi_path_info;
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+
+            fastcgi_pass 127.0.0.1:9000;
+            fastcgi_index index.php;
+            fastcgi_split_path_info ^(.+\.php)(/.+)$;
+            fastcgi_intercept_errors on;
+            include fastcgi_params;
+
+	    #Don't cache anything
+            expires -1;
+            add_header Pragma "no-cache";
+            add_header Cache-Control "no-store, no-cache, must-revalidate, post-check=0, pre-check=0";
+            break;
+        }
+    }
